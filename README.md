@@ -1,0 +1,2 @@
+# Efficient-Natural-Gradient-Descent-with-Theoretical-Guarantees
+Numerial Experiment of the paper "Diagonal Approximation of Fisher Information Metric in DNNs: Efficient Natural Gradient Descent with Theoretical Guarantees".
