@@ -13,4 +13,4 @@ timm
 
 tensorboardX
 
-This implementation is partially refered from https://github.com/alecwangcq/KFAC-Pytorch.
+This implementation is partially refered from https://github.com/anonymousauthor/anonymousproject.
