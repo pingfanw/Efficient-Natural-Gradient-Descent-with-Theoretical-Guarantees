@@ -8,5 +8,3 @@ python 3.10.4\
 tqdm\
 timm\
 tensorboardX
-
-This implementation is partially refered from https://github.com/anonymousauthor/anonymousproject.
