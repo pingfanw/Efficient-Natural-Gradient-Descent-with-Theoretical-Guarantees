@@ -26,8 +26,12 @@ class SGD_(optim.Optimizer):
             raise ValueError("Invalid weight_decay value: {}".format(weight_decay))
         defaults = dict(lr=lr, momentum=momentum, params=params,
                         weight_decay=weight_decay)
+<<<<<<< HEAD
         # TODO (CW): KFAC optimizer now only support model as input
         super(SGD_, self).__init__(params, defaults)
+=======
+        super(SGD_mod, self).__init__(params, defaults)
+>>>>>>> d5e748dcb6fc6208aa57b3c2151ca7432b395526
     def _step(self, closure):
         for group in self.param_groups:
             weight_decay = group['weight_decay']
@@ -37,9 +41,9 @@ class SGD_(optim.Optimizer):
                 if param.grad is None:
                     continue
                 d_p = (param.grad.data)
-                if weight_decay != 0:       # do regularization after 20 TCov
+                if weight_decay != 0:
                     d_p.add_(param.data, alpha=weight_decay)
-                if momentum != 0:                                       # add momentum
+                if momentum != 0:
                     param_state = self.state[param]
                     if 'momentum_buffer' not in param_state:
                         buf = param_state['momentum_buffer'] = torch.zeros_like(param.data)
@@ -48,9 +52,9 @@ class SGD_(optim.Optimizer):
                         buf = param_state['momentum_buffer']
                         buf.mul_(momentum).add_(d_p, alpha=1)
                     d_p = buf
-                param.data.add_(d_p, alpha=-group['lr'])      # update the parameters
+                param.data.add_(d_p, alpha=-group['lr'])
     def step(self, closure=None):
-        self._step(closure)         #update the parameters
+        self._step(closure)
 
 
 class Adam_(optim.Optimizer):
@@ -138,7 +142,6 @@ class DNGD(optim.Optimizer):
             raise ValueError("Invalid weight_decay value: {}".format(weight_decay))
         defaults = dict(lr=lr, momentum=momentum,
                         weight_decay=weight_decay, damping=damping)
-        # TODO (CW): KFAC optimizer now only support model as input
         super(DNGD, self).__init__(model.parameters(), defaults)
         self.known_modules = {'Linear', 'Conv2d'}
         self.modules = []
@@ -154,7 +157,6 @@ class DNGD(optim.Optimizer):
             if classname in self.known_modules:    
                 self.modules.append(module)        
 
-                
     @staticmethod
     def _get_matrix_form_grad(m, classname):
         """
@@ -205,7 +207,7 @@ class DNGD(optim.Optimizer):
                 if param.grad is None:
                     continue
                 d_p = param.grad.data
-                if weight_decay != 0:          # do regularization after 20 TCov
+                if weight_decay != 0:
                     d_p.add_(param.data, alpha=weight_decay)
                 if momentum != 0:                                       # add momentum
                     param_state = self.state[param]
@@ -219,7 +221,6 @@ class DNGD(optim.Optimizer):
                 param.data.add_(d_p, alpha=-group['lr'])      # update the parameters
 
     def step(self, closure=None):
-        # FIXME(CW): temporal fix for compatibility with Official LR scheduler.
         group = self.param_groups[0]
         lr = group['lr']
         damping = group['damping']
@@ -229,114 +230,7 @@ class DNGD(optim.Optimizer):
             param_grad_mat = self._get_matrix_form_grad(m, classname)       #acquiring the grad matrix of m layer (grad_mat=cat[weight,bias])
             fvp = self._get_natural_grad(m, param_grad_mat, damping)          # acquiring the fisher vector product if m layer
             updates[m] = fvp                                               # put the fvp of m layer about bias and weight into updates[m]
-        self._update_grad(updates)                          #do kl clip and update grad
-        self._step(closure)         #update the parameters
-
-class TNGD(optim.Optimizer):
-    def __init__(self,
-                 model,
-                 lr=0.01,
-                 momentum=0.9,
-                 weight_decay=0):
-        # legitimation check
-        if lr < 0.0:
-            raise ValueError("Invalid learning rate: {}".format(lr))
-        if momentum < 0.0:
-            raise ValueError("Invalid momentum value: {}".format(momentum))
-        if weight_decay < 0.0:
-            raise ValueError("Invalid weight_decay value: {}".format(weight_decay))
-        defaults = dict(lr=lr, momentum=momentum,
-                        weight_decay=weight_decay)
-        # TODO (CW): KFAC optimizer now only support model as input
-        super(TNGD, self).__init__(model.parameters(), defaults)
-        self.known_modules = {'Linear', 'Conv2d'}
-        self.modules = []
-        """ list for saving modules temporarily """
-        self.model = model
-        self._prepare_model()           
-
-    def _prepare_model(self):
-        print(self.model)
-        for module in self.model.modules():
-            classname = module.__class__.__name__
-            if classname in self.known_modules:
-                self.modules.append(module)
-
-                
-    @staticmethod
-    def _get_matrix_form_grad(m, classname):
-        """
-        :param m: the mth layer
-        :param classname: the class name of the layer
-        :return: a matrix form of the gradient. it should be a [output_dim, input_dim] matrix.
-        """
-        if classname == 'Conv2d':
-            param_grad_mat = m.weight.grad.data.view(m.weight.grad.data.size(0), -1)  # n_filters * (in_c * kw * kh) 卷积核梯度转矩阵
-        else:
-            param_grad_mat = m.weight.grad.data
-        if m.bias is not None:
-            param_grad_mat = torch.cat([param_grad_mat, m.bias.grad.data.view(-1, 1)], 1)
-        return param_grad_mat
-
-    def _get_natural_grad(self, m, param_grad_mat):
-        """
-        :param m:  the mth layer
-        :param param_grad_mat: the gradients in matrix form
-        :return: a list of gradients w.r.t to the parameters in `m` th layer
-        """
-        trace = 1 / torch.sum(torch.square(param_grad_mat))
-        # print(trace)
-        v = trace*param_grad_mat    
-        # v = param_grad_mat                     
-        if m.bias is not None:
-            v = [v[:, :-1], v[:, -1:]]
-            v[0] = v[0].view(m.weight.grad.data.size())
-            v[1] = v[1].view(m.bias.grad.data.size())
-        else:
-            v = [v.view(m.weight.grad.data.size())]
-        return v
-
-    def _update_grad(self, updates):        
-        # update grad with fvp
-        for m in self.modules:
-            v = updates[m]
-            m.weight.grad.data.copy_(v[0])      # update the weight, replacing the original gradient with F^-1*nebla(h)
-            if m.bias is not None:
-                m.bias.grad.data.copy_(v[1])        # update the bias
-
-    def _step(self, closure):
-        for group in self.param_groups:
-            weight_decay = group['weight_decay']
-            momentum = group['momentum']
-            for param in group['params']:
-                if param.grad is None:
-                    continue
-                d_p = param.grad.data
-                if weight_decay != 0:          # do regularization after 20 TCov
-                    d_p.add_(param.data, alpha=weight_decay)
-                if momentum != 0:                                       # add momentum
-                    param_state = self.state[param]
-                    if 'momentum_buffer' not in param_state:
-                        buf = param_state['momentum_buffer'] = torch.zeros_like(param.data)
-                        buf.mul_(momentum).add_(d_p)
-                    else:
-                        buf = param_state['momentum_buffer']
-                        buf.mul_(momentum).add_(d_p, alpha=1)
-                    d_p = buf
-                param.data.add_(d_p, alpha=-group['lr'])      # update the parameters
-
-    def step(self, closure=None):
-        # FIXME(CW): temporal fix for compatibility with Official LR scheduler.
-        group = self.param_groups[0]
-        lr = group['lr']
-        updates = {}
-        for m in self.modules:
-            classname = m.__class__.__name__                                 #update the inverse of the fisher by implementing eigen decomposition of kronecker factor
-            param_grad_mat = self._get_matrix_form_grad(m, classname)       #acquiring the grad matrix of m layer (grad_mat=cat[weight,bias])
-            fvp = self._get_natural_grad(m, param_grad_mat)          # acquiring the fisher vector product if m layer
-            updates[m] = fvp                                               # put the fvp of m layer about bias and weight into updates[m]
-        self._update_grad(updates)                          #do kl clip and update grad
-
+        self._update_grad(updates)                         
         self._step(closure)         #update the parameters
 
 
