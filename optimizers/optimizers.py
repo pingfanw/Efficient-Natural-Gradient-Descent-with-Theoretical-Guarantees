@@ -26,12 +26,8 @@ class SGD_(optim.Optimizer):
             raise ValueError("Invalid weight_decay value: {}".format(weight_decay))
         defaults = dict(lr=lr, momentum=momentum, params=params,
                         weight_decay=weight_decay)
-<<<<<<< HEAD
         # TODO (CW): KFAC optimizer now only support model as input
         super(SGD_, self).__init__(params, defaults)
-=======
-        super(SGD_mod, self).__init__(params, defaults)
->>>>>>> d5e748dcb6fc6208aa57b3c2151ca7432b395526
     def _step(self, closure):
         for group in self.param_groups:
             weight_decay = group['weight_decay']
