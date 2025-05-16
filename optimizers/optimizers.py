@@ -11,7 +11,7 @@ from torch.optim.optimizer import (Optimizer, required, _use_grad_for_differenti
 from typing import List, Optional
 from torch.utils._foreach_utils import _group_tensors_by_device_and_dtype
 
-class SGD_mod(optim.Optimizer):
+class SGD_(optim.Optimizer):
     def __init__(self,
                  params,
                  lr=0.01,
@@ -27,7 +27,7 @@ class SGD_mod(optim.Optimizer):
         defaults = dict(lr=lr, momentum=momentum, params=params,
                         weight_decay=weight_decay)
         # TODO (CW): KFAC optimizer now only support model as input
-        super(SGD_mod, self).__init__(params, defaults)
+        super(SGD_, self).__init__(params, defaults)
     def _step(self, closure):
         for group in self.param_groups:
             weight_decay = group['weight_decay']
@@ -53,7 +53,7 @@ class SGD_mod(optim.Optimizer):
         self._step(closure)         #update the parameters
 
 
-class Adam_mod(optim.Optimizer):
+class Adam_(optim.Optimizer):
     def __init__(self,
                  params,
                  lr=0.001,
@@ -71,10 +71,10 @@ class Adam_mod(optim.Optimizer):
             raise ValueError("Invalid weight_decay value: {}".format(weight_decay))
         defaults = dict(lr=lr, betas=betas, eps=eps,
                         weight_decay=weight_decay, amsgrad=amsgrad)
-        super(Adam_mod, self).__init__(params, defaults)
+        super(Adam_, self).__init__(params, defaults)
 
     def __setstate__(self, state):
-        super(Adam_mod, self).__setstate__(state)
+        super(Adam_, self).__setstate__(state)
 
     def step(self, closure=None):
         loss = None
@@ -86,7 +86,7 @@ class Adam_mod(optim.Optimizer):
                     continue
                 grad = p.grad.data
                 if grad.is_sparse:
-                    raise RuntimeError('Adam_mod does not support sparse gradients, please consider SparseAdam instead')
+                    raise RuntimeError('Adam_ does not support sparse gradients, please consider SparseAdam instead')
                 state = self.state[p]
                 # State initialization
                 if len(state) == 0:

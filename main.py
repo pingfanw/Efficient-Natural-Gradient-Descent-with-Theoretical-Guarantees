@@ -2,7 +2,7 @@
 import argparse
 import os
 import csv
-from optimizers import (KFACOptimizer, KFACOptimizer_NonFull, EKFACOptimizer, EKFACOptimizer_NonFull, DNGD, SGD_mod, Adam_mod)
+from optimizers import (KFACOptimizer, KFACOptimizer_NonFull, EKFACOptimizer, EKFACOptimizer_NonFull, DNGD, SGD_, Adam_)
 import torch
 import torch.nn as nn
 import time
@@ -114,8 +114,8 @@ def train():
     optim_name = args.optimizer.lower()
     if optim_name == 'sgd':
         optimizer = optim.SGD(net.parameters(),lr=args.learning_rate,momentum=args.momentum,weight_decay=args.weight_decay)
-    elif optim_name == 'adam_mod':
-        optimizer = Adam_mod(net.parameters(),lr=args.learning_rate,weight_decay=args.weight_decay)
+    elif optim_name == 'Adam_':
+        optimizer = Adam_(net.parameters(),lr=args.learning_rate,weight_decay=args.weight_decay)
     elif optim_name == 'kfac':
         if args.network == 'preresnet':
             optimizer = KFACOptimizer_NonFull(net,lr=args.learning_rate,momentum=args.momentum,stat_decay=args.stat_decay, damping=args.damping,kl_clip=args.kl_clip,weight_decay=args.weight_decay,TCov=args.TCov,TInv=args.TInv)
@@ -128,8 +128,8 @@ def train():
             optimizer = EKFACOptimizer(net,lr=args.learning_rate,momentum=args.momentum,stat_decay=args.stat_decay,damping=args.damping,kl_clip=args.kl_clip,weight_decay=args.weight_decay,TCov=args.TCov,TScal=args.TScal,TInv=args.TInv)
     elif optim_name == 'dngd':
         optimizer = DNGD(net, lr=args.learning_rate,momentum=args.momentum,weight_decay=args.weight_decay,damping=args.damping)
-    elif optim_name == 'sgd_mod':
-        optimizer = SGD_mod(net.parameters(),lr=args.learning_rate,momentum=args.momentum,weight_decay=args.weight_decay)
+    elif optim_name == 'SGD_':
+        optimizer = SGD_(net.parameters(),lr=args.learning_rate,momentum=args.momentum,weight_decay=args.weight_decay)
     else:
         raise NotImplementedError
     if args.milestone is None:
