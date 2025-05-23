@@ -1,7 +1,7 @@
-from models.cifar import (alexnet, densenet, resnet,
-                          vgg16_bn, vgg19_bn, wrn, preresnet, mlp, pyramidnet)
+from models.cifar import (alexnet,densenet,resnet,
+                          vgg16_bn,vgg19_bn,wrn,preresnet,mlp,pyramidnet,vit_small,vit_base,vit_large,vit_huge)
 
-def get_network_cifar(network, **kwargs):
+def get_network_cifar(network,**kwargs):
     networks = {
         'alexnet': alexnet,
         'densenet': densenet,
@@ -11,7 +11,11 @@ def get_network_cifar(network, **kwargs):
         'wrn': wrn,
         'preresnet': preresnet,
         'mlp': mlp,
-        'pyramidnet': pyramidnet
+        'pyramidnet': pyramidnet,
+        'vit_small': vit_small,
+        'vit_base': vit_base,
+        'vit_large': vit_large,
+        'vit_huge': vit_huge
     }
     return networks[network](**kwargs)
 
