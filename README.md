@@ -1,7 +1,7 @@
 # Efficient-Natural-Gradient-Descent-with-Theoretical-Guarantees
-Numerial Experiment of the paper "Diagonal Approximation of Fisher Information Metric in DNNs: Efficient Natural Gradient Descent with Theoretical Guarantees".
+Numerial Experiment of the paper "Diagonal Natural Gradient Descent: A Simple yet Efficient Deep Learning Optimizer".
 
-Requirements
+Requirements:
 
 >pytorch 2.0.0\
 python 3.10.4\
