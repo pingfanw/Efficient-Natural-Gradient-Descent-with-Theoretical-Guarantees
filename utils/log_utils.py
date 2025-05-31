@@ -2,8 +2,12 @@ import os
 import csv
 
 def prepare_csv(log_path,dataset,model,depth,optimizer,noise_rate,damping,experiment_type):
-    train_log_path = log_path+'/'+experiment_type+'/'+dataset+'/'+model+str(depth)+'/train'
-    test_log_path = log_path+'/'+experiment_type+'/'+dataset+'/'+model+str(depth)+'/test'
+    if model in ['vit_small','vit_base','vit_large','vit_huge']:
+        train_log_path = log_path+'/'+experiment_type+'/'+dataset+'/'+model+'/train'
+        test_log_path = log_path+'/'+experiment_type+'/'+dataset+'/'+model+'/test'
+    else:
+        train_log_path = log_path+'/'+experiment_type+'/'+dataset+'/'+model+str(depth)+'/train'
+        test_log_path = log_path+'/'+experiment_type+'/'+dataset+'/'+model+str(depth)+'/test'
     if not os.path.exists(train_log_path):
         os.makedirs(train_log_path)
     if not os.path.exists(test_log_path):
