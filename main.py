@@ -20,7 +20,7 @@ def train():
     parser.add_argument('--noise_rate',default=0.0,type=float,help="Noise Rate.")
     parser.add_argument('--noise_mode',default='sym',type=str,help="Noise Mode for sym and asym.")
     parser.add_argument('--num_workers',default=0,type=int,help="Num of workers.")
-    parser.add_argument('--data_path',default='/root/workspace/datasets',type=str,help="Data Path of Standard Datasets.")
+    parser.add_argument('--data_path',default='E:\datasets',type=str,help="Data Path of Standard Datasets.")
     parser.add_argument('--outputs_dim',default=10,type=int)
     parser.add_argument('--input_dim',default=32,type=int)
     parser.add_argument('--in_channels',default=3,type=int)
@@ -178,8 +178,8 @@ def train():
                                                          args.network,
                                                          args.depth))
             best_acc = acc          
-    csv_train.close()
-    csv_test.close()
+    # csv_train.close()
+    # csv_test.close()
 
 def main():
     train()

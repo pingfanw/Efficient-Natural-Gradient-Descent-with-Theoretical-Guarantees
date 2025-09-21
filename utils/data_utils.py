@@ -10,7 +10,7 @@ from torchvision.datasets import CIFAR10,CIFAR100,MNIST,FashionMNIST,SVHN
 from torch.utils.data import ConcatDataset
 from PIL import Image
 
-# support datasets: cifar10,cifar100,mnist,fashionmnist,imagenet,miniimagenet
+# support datasets: cifar10,cifar100,mnist,fashionmnist,imagenet,miniimagenet, tinyimagenet
 
 def set_seed(seed=0): 
     if seed < 0:
@@ -21,6 +21,47 @@ def set_seed(seed=0):
     torch.cuda.manual_seed(seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
+
+class TinyImageNetValDataset(Dataset):
+    """
+    Validation set for Tiny ImageNet.
+    Uses val_annotations.txt to map image filename -> wnid label,
+    then converts wnid into class index using trainset.class_to_idx.
+    """
+    def __init__(self, annotations_map, img_dir, class_to_idx, transform=None):
+        self.annotations_map = annotations_map
+        self.img_dir = img_dir
+        self.transform = transform
+        self.class_to_idx = class_to_idx
+        self.image_filenames = list(self.annotations_map.keys())
+
+    def __len__(self):
+        return len(self.image_filenames)
+
+    def __getitem__(self, idx):
+        img_name = self.image_filenames[idx]
+        img_path = os.path.join(self.img_dir, img_name)
+        image = Image.open(img_path).convert("RGB")
+        wnid = self.annotations_map[img_name]
+        target = self.class_to_idx[wnid]
+        if self.transform:
+            image = self.transform(image)
+        return image, target
+
+
+def _load_tinyimagenet_val_annotations(annotations_path):
+    """
+    Parse tiny-imagenet-200/val/val_annotations.txt
+    Returns: dict[filename] = wnid
+    """
+    annotations_map = {}
+    with open(annotations_path, "r") as f:
+        for line in f:
+            parts = line.strip().split()
+            if len(parts) >= 2:
+                img_name, wnid = parts[0], parts[1]
+                annotations_map[img_name] = wnid
+    return annotations_map
 
 class NoiseDataset(Dataset):
     def __init__(self,dataset,noise_rate=0.2,noise_mode='sym',root_dir='./data',
@@ -182,6 +223,21 @@ class NoiseDataLoader:
                                                 transforms.CenterCrop(84),
                                                 transforms.ToTensor(),
                                                 transforms.Normalize((0.485,0.456,0.406),(0.229,0.224,0.225))])
+        elif self.dataset == 'tinyimagenet':
+            # Tiny ImageNet (200 classes, 64x64)
+            mean = (0.4802, 0.4481, 0.3975)
+            std  = (0.2302, 0.2265, 0.2262)
+            transform_train = transforms.Compose([
+                transforms.RandomCrop(64, padding=8),
+                transforms.RandomHorizontalFlip(),
+                transforms.RandomRotation(15),
+                transforms.ToTensor(),
+                transforms.Normalize(mean, std),
+            ])
+            transform_test = transforms.Compose([
+                transforms.ToTensor(),
+                transforms.Normalize(mean, std),
+            ])
         else:
             raise ValueError(f"Unsupported dataset: {self.dataset}")
         return transform_train,transform_test
@@ -230,6 +286,27 @@ class NoiseDataLoader:
             test_dir = os.path.join(self.root_dir+'/'+'miniimagenet/test')
             train_dataset = datasets.ImageFolder(train_dir,transform=transform_train)
             test_dataset = datasets.ImageFolder(test_dir,transform=transform_test)
+        elif self.dataset == 'tinyimagenet':
+            # Expect directory layout from the official Tiny-ImageNet:
+            # {root_dir}/tiny-imagenet-200/train/
+            # {root_dir}/tiny-imagenet-200/val/images
+            # {root_dir}/tiny-imagenet-200/val/val_annotations.txt
+            base_dir = os.path.join(self.root_dir, 'tiny-imagenet-200')
+            train_dir = os.path.join(base_dir, 'train')
+            val_img_dir = os.path.join(base_dir, 'val', 'images')
+            val_anno = os.path.join(base_dir, 'val', 'val_annotations.txt')
+            # train: standard ImageFolder (200 wnids -> indices)
+            train_dataset = datasets.ImageFolder(train_dir, transform=transform_train)
+            class_to_idx = train_dataset.class_to_idx  # wnid->index mapping
+            # val: parse val_annotations.txt to map filename -> wnid, then to index
+            annotations_map = _load_tinyimagenet_val_annotations(val_anno)
+            test_dataset = TinyImageNetValDataset(
+                annotations_map=annotations_map,
+                img_dir=val_img_dir,
+                class_to_idx=class_to_idx,
+                transform=transform_test
+            )
+
         else:
             raise ValueError(f"Unsupported dataset: {self.dataset}")
         train_loader = torch.utils.data.DataLoader(dataset=train_dataset,

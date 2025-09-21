@@ -10,3 +10,4 @@ from .network_utils_imagenet import *
 from .network_utils_miniimagenet import *
 from .network_utils_mnist import *
 from .network_utils_svhn import *
+from .network_utils_tinyimagenet import *
