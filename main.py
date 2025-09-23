@@ -1,6 +1,7 @@
-'''Train CIFAR10/CIFAR100/MNIST/FashionMNIST/Imagenet/MiniImagenet.'''
+'''Train CIFAR10/CIFAR100/MNIST/FashionMNIST/Imagenet/MiniImagenet/TinyImagenet.'''
 import argparse
 import os
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 import torch
 import torch.nn as nn
 import time
@@ -44,10 +45,14 @@ def train():
     parser.add_argument('--block_type',default='basic',type=str,help="basic, bottle_neck")
     parser.add_argument('--base_channels',default=16,type=int)
     # optimizer argument
-    parser.add_argument('--optimizer',default='kfac',type=str)
-    parser.add_argument('--learning_rate',default=1.0,type=float)
+    parser.add_argument('--optimizer',default='adam_',type=str)
+    parser.add_argument('--learning_rate',default=0.1,type=float)
     parser.add_argument('--batch_size',default=128,type=int)
     parser.add_argument('--epoch',default=300,type=int)
+    parser.add_argument('--eps',default=1e-10,type=float)             # for Adam AdamW and AdaGrad
+    parser.add_argument('--retraction_eps',default=1e-12,type=float)  # for Muon
+    parser.add_argument('--amsgrad',default=False,type=bool)    # for Adam 
+    parser.add_argument('--betas',default=[0.9,0.999],type=list)    # for Adam, AdamW and Muon
     parser.add_argument('--milestone',default=None,type=str)              # for MultiStepLR
     parser.add_argument('--momentum',default=0.9,type=float)
     parser.add_argument('--stat_decay',default=0.95,type=float)           # for KFAC
@@ -96,8 +101,8 @@ def train():
         model_path = args.model_path+'/'+args.experiment_type+'/'+args.dataset.lower()+'/'+args.network.lower()+str(args.depth)
         if not os.path.isdir(model_path):
             os.makedirs(model_path)
-    csv_train,csv_train_writer,csv_test,csv_test_writer = prepare_csv(args.log_path,args.dataset.lower(),args.network.lower(),args.depth,optim_name,args.noise_rate,args.damping,args.experiment_type)
-    write_csv(csv_train,csv_train_writer,csv_test,csv_test_writer,head=True,train=False,tets=False,args=args,optim_name=optim_name)
+    # csv_train,csv_train_writer,csv_test,csv_test_writer = prepare_csv(args.log_path,args.dataset.lower(),args.network.lower(),args.depth,optim_name,args.noise_rate,args.damping,args.experiment_type)
+    # write_csv(csv_train,csv_train_writer,csv_test,csv_test_writer,head=True,train=False,tets=False,args=args,optim_name=optim_name)
     for epoch in range(start_epoch,args.epoch):
         # Train
         net.train()
@@ -135,8 +140,8 @@ def train():
             desc = ('[Train][%s][%s][LR=%.4f] Loss: %.4f | Acc: %.3f%% (%d/%d)' %
                     (optim_name,epoch+1,lr_scheduler.get_last_lr()[0],train_loss / (batch_index + 1),100. * correct / total,correct,total))
             prog_bar.set_description(desc,refresh=True)
-        write_csv(csv_train,csv_train_writer,csv_test,csv_test_writer,head=False,train=True,test=False,args=None,
-                    epoch=epoch,train_loss=train_loss,correct=correct,total=total,time_elapsed=time_elapsed,batch_index=batch_index)
+        # write_csv(csv_train,csv_train_writer,csv_test,csv_test_writer,head=False,train=True,test=False,args=None,
+                    # epoch=epoch,train_loss=train_loss,correct=correct,total=total,time_elapsed=time_elapsed,batch_index=batch_index)
         lr_scheduler.step()
         # Validate 
         net.eval()
@@ -160,24 +165,24 @@ def train():
                         % (optim_name,epoch+1,lr_scheduler.get_last_lr()[0],test_loss / (batch_idx + 1),100. * correct / total,correct,total))
                 prog_bar.set_description(desc,refresh=True)        
         acc = 100.*correct/total
-        write_csv(csv_train,csv_train_writer,csv_test,csv_test_writer,head=False,train=False,test=True,args=None,
-                    epoch=epoch,test_loss=test_loss,acc=acc,batch_index=batch_idx,train_loss=train_loss)
-        if acc > best_acc:
-            print('Saving..')
-            state = {
-                'net': net.state_dict(),
-                'acc': acc,
-                'epoch': epoch,
-                'loss': test_loss,
-                'args': args
-            }
-        if args.experiment_type == 'error':
-            torch.save(state,'%s/%s_%s_%s%s_best.t7' % (model_path,
-                                                         args.optimizer,
-                                                         args.dataset,
-                                                         args.network,
-                                                         args.depth))
-            best_acc = acc          
+        # write_csv(csv_train,csv_train_writer,csv_test,csv_test_writer,head=False,train=False,test=True,args=None,
+                    # epoch=epoch,test_loss=test_loss,acc=acc,batch_index=batch_idx,train_loss=train_loss)
+        # if acc > best_acc:
+        #     print('Saving..')
+        #     state = {
+        #         'net': net.state_dict(),
+        #         'acc': acc,
+        #         'epoch': epoch,
+        #         'loss': test_loss,
+        #         'args': args
+        #     }
+        # if args.experiment_type == 'error':
+        #     torch.save(state,'%s/%s_%s_%s%s_best.t7' % (model_path,
+        #                                                  args.optimizer,
+        #                                                  args.dataset,
+        #                                                  args.network,
+        #                                                  args.depth))
+            # best_acc = acc          
     # csv_train.close()
     # csv_test.close()
 

@@ -1,4 +1,4 @@
-from .optimizers import KFACOptimizer,EKFACOptimizer,DNGD,SGD_,Adam_
+from .optimizers import KFACOptimizer,EKFACOptimizer,DNGD,SGD_,Adam_,AdaGrad_,AdamW,Muon
 
 def get_optimizer(name):
     if name == 'kfac':
@@ -11,5 +11,11 @@ def get_optimizer(name):
         return SGD_
     elif name == 'Adam_':
         return Adam_
+    elif name == 'AdaGrad_':
+        return AdaGrad_
+    elif name == 'AdamW':
+        return AdamW
+    elif name == 'muon':
+        return Muon
     else:
         raise NotImplementedError

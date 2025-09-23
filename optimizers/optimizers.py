@@ -121,6 +121,49 @@ class Adam_(optim.Optimizer):
                 p.data.addcdiv_(exp_avg,denom,value=-step_size)
         return loss
 
+class AdaGrad_(optim.Optimizer):
+    def __init__(self,
+                 params,
+                 lr: float = 0.01,
+                 eps: float = 1e-10,
+                 weight_decay: float = 0.0):
+        if lr < 0.0:
+            raise ValueError(f"Invalid learning rate: {lr}")
+        if eps <= 0.0:
+            raise ValueError(f"Invalid epsilon value: {eps}")
+        if weight_decay < 0.0:
+            raise ValueError(f"Invalid weight_decay value: {weight_decay}")
+        defaults = dict(lr=lr, eps=eps, weight_decay=weight_decay)
+        super(AdaGrad_, self).__init__(params, defaults)
+
+    def __setstate__(self, state):
+        super(AdaGrad_, self).__setstate__(state)
+
+    def step(self, closure=None):
+        loss = None
+        if closure is not None:
+            loss = closure()
+        for group in self.param_groups:
+            lr = group['lr']
+            eps = group['eps']
+            wd = group['weight_decay']
+            for p in group['params']:
+                if p.grad is None:
+                    continue
+                grad = p.grad.data
+                if grad.is_sparse:
+                    raise RuntimeError("AdaGrad_ does not support sparse gradients")
+                if wd != 0:
+                    grad = grad.add(p.data, alpha=wd)
+                state = self.state[p]
+                if len(state) == 0:
+                    state['sum'] = torch.zeros_like(p.data)
+                acc = state['sum']
+                acc.addcmul_(grad, grad, value=1.0)
+                std = acc.sqrt().add_(eps)
+                p.data.addcdiv_(grad, std, value=-lr)
+        return loss
+
 
 class DNGD(optim.Optimizer):
     def __init__(self,
@@ -642,3 +685,130 @@ class EKFACOptimizer(optim.Optimizer):
         self._kl_clip_and_update_grad(updates,lr)
         self._step(closure)
         self.steps += 1
+
+
+class AdamW(optim.Optimizer):
+    def __init__(self,
+                 params,
+                 lr: float = 1e-3,
+                 betas=(0.9, 0.999),
+                 eps: float = 1e-8,
+                 weight_decay: float = 0.0):
+        if lr < 0.0:
+            raise ValueError(f"Invalid learning rate: {lr}")
+        if not (0.0 <= betas[0] < 1.0) or not (0.0 <= betas[1] < 1.0):
+            raise ValueError(f"Invalid betas: {betas}")
+        if eps <= 0.0:
+            raise ValueError(f"Invalid eps: {eps}")
+        if weight_decay < 0.0:
+            raise ValueError(f"Invalid weight_decay: {weight_decay}")
+
+        defaults = dict(lr=lr, betas=betas, eps=eps, weight_decay=weight_decay)
+        super(AdamW, self).__init__(params, defaults)
+
+    def __setstate__(self, state):
+        super(AdamW, self).__setstate__(state)
+
+    def step(self, closure=None):
+        loss = None
+        if closure is not None:
+            loss = closure()
+        for group in self.param_groups:
+            lr = group['lr']
+            beta1, beta2 = group['betas']
+            eps = group['eps']
+            wd = group['weight_decay']
+            for p in group['params']:
+                if p.grad is None:
+                    continue
+                grad = p.grad.data
+                if grad.is_sparse:
+                    raise RuntimeError("AdamW_ does not support sparse gradients")
+                state = self.state[p]
+                if len(state) == 0:
+                    state['step'] = 0
+                    state['exp_avg'] = torch.zeros_like(p.data)
+                    state['exp_avg_sq'] = torch.zeros_like(p.data)
+                exp_avg, exp_avg_sq = state['exp_avg'], state['exp_avg_sq']
+                state['step'] += 1
+                exp_avg.mul_(beta1).add_(grad, alpha=1 - beta1)
+                exp_avg_sq.mul_(beta2).addcmul_(grad, grad, value=1 - beta2)
+                bias_correction1 = 1 - beta1 ** state['step']
+                bias_correction2 = 1 - beta2 ** state['step']
+                step_size = lr * (bias_correction2 ** 0.5) / bias_correction1
+                denom = exp_avg_sq.sqrt().add_(eps)
+                if wd != 0.0:
+                    p.data.mul_(1 - lr * wd)
+                p.data.addcdiv_(exp_avg, denom, value=-step_size)
+        return loss
+
+class Muon(optim.Optimizer):
+    def __init__(self,
+                 params,
+                 lr: float = 1e-3,
+                 betas=(0.9, 0.999),
+                 eps: float = 1e-8,
+                 weight_decay: float = 0.0,
+                 retraction_eps: float = 1e-12):
+        if lr < 0.0:
+            raise ValueError(f"Invalid learning rate: {lr}")
+        if not (0.0 <= betas[0] < 1.0) or not (0.0 <= betas[1] < 1.0):
+            raise ValueError(f"Invalid betas: {betas}")
+        if eps <= 0.0:
+            raise ValueError(f"Invalid eps: {eps}")
+        if weight_decay < 0.0:
+            raise ValueError(f"Invalid weight_decay: {weight_decay}")
+
+        defaults = dict(lr=lr, betas=betas, eps=eps,
+                        weight_decay=weight_decay, retraction_eps=retraction_eps)
+        super(Muon, self).__init__(params, defaults)
+
+    def __setstate__(self, state):
+        super(Muon, self).__setstate__(state)
+
+    @staticmethod
+    def _frob_norm(t: torch.Tensor) -> torch.Tensor:
+        return torch.norm(t, p='fro') if t.ndim >= 2 else torch.norm(t)
+
+    def step(self, closure=None):
+        loss = None
+        if closure is not None:
+            loss = closure()
+        for group in self.param_groups:
+            lr = group['lr']
+            beta1, beta2 = group['betas']
+            eps = group['eps']
+            wd = group['weight_decay']
+            r_eps = group['retraction_eps']
+            for p in group['params']:
+                if p.grad is None:
+                    continue
+                grad = p.grad.data
+                if grad.is_sparse:
+                    raise RuntimeError("Muon_ does not support sparse gradients")
+                state = self.state[p]
+                if len(state) == 0:
+                    state['step'] = 0
+                    state['exp_avg'] = torch.zeros_like(p.data)
+                    state['exp_avg_sq'] = torch.zeros_like(p.data)
+                exp_avg, exp_avg_sq = state['exp_avg'], state['exp_avg_sq']
+                state['step'] += 1
+                exp_avg.mul_(beta1).add_(grad, alpha=1 - beta1)
+                exp_avg_sq.mul_(beta2).addcmul_(grad, grad, value=1 - beta2)
+                bias_correction1 = 1 - beta1 ** state['step']
+                bias_correction2 = 1 - beta2 ** state['step']
+                step_size = lr * (bias_correction2 ** 0.5) / bias_correction1
+                denom = exp_avg_sq.sqrt().add_(eps)
+                if wd != 0.0:
+                    p.data.mul_(1 - lr * wd)
+                do_retract = (p.data.ndim >= 2)
+                if do_retract:
+                    with torch.no_grad():
+                        old_norm = self._frob_norm(p.data).clamp_min(r_eps)
+                p.data.addcdiv_(exp_avg, denom, value=-step_size)
+                if do_retract:
+                    with torch.no_grad():
+                        new_norm = self._frob_norm(p.data).clamp_min(r_eps)
+                        scale = (old_norm / new_norm)
+                        p.data.mul_(scale)
+        return loss

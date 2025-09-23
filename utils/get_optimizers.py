@@ -1,4 +1,4 @@
-from optimizers import (KFACOptimizer,EKFACOptimizer,DNGD,SGD_,Adam_)
+from optimizers import (KFACOptimizer,EKFACOptimizer,DNGD,SGD_,Adam_,AdaGrad_,AdamW,Muon)
 import torch.optim as optim
 import inspect
 def get_optimizer(args,net):
@@ -9,6 +9,9 @@ def get_optimizer(args,net):
         'ekfac':     EKFACOptimizer,
         'dngd':      DNGD,
         'sgd_':      SGD_,
+        'adagrad_':  AdaGrad_,
+        'adamw':     AdamW,
+        'muon':      Muon
     }
     optim_name = args.optimizer.lower()
     if optim_name not in OPTIMIZER_REGISTRY:
@@ -17,9 +20,15 @@ def get_optimizer(args,net):
     if optim_name == 'sgd':
         optimizer = optim_cls(net.parameters(), lr=args.learning_rate, momentum=args.momentum, weight_decay=args.weight_decay)
     elif optim_name == 'adam_':
-        optimizer = optim_cls(net.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
+        optimizer = optim_cls(net.parameters(), lr=args.learning_rate, betas=args.betas, weight_decay=args.weight_decay, eps=args.eps, amsgrad=args.amsgrad)
     elif optim_name == 'sgd_':
         optimizer = optim_cls(net.parameters(), lr=args.learning_rate, momentum=args.momentum, weight_decay=args.weight_decay)
+    elif optim_name == 'adagrad_':
+        optimizer = optim_cls(net.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay, eps=args.eps)
+    elif optim_name == 'adamw':
+        optimizer = optim_cls(net.parameters(), lr=args.learning_rate, betas=args.betas, weight_decay=args.weight_decay, eps=args.eps)
+    elif optim_name == 'muon':
+        optimizer = optim_cls(net.parameters(), lr=args.learning_rate, betas=args.betas, weight_decay=args.weight_decay, eps=args.eps, retraction_eps=args.retraction_eps)
     elif optim_name == 'dngd':
         optimizer = optim_cls(net, lr=args.learning_rate, momentum=args.momentum, weight_decay=args.weight_decay, damping=args.damping)
     elif optim_name == 'kfac':

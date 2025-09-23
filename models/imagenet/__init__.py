@@ -66,3 +66,6 @@ from .wrn import *
 from .densenet import *
 from .pyramidnet import *
 from .visiontransformer import *
+from .pretrain_vit import *
+from .pretrain_swintransformer import *
+from .pretrain_deit import *
