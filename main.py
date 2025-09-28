@@ -5,14 +5,14 @@ os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 import torch
 import torch.nn as nn
 import time
-from torch.optim.lr_scheduler import MultiStepLR
+from torch.optim.lr_scheduler import MultiStepLR, CosineAnnealingLR
 from tqdm import tqdm
 from utils.get_networks import get_network
 from utils.get_optimizers import get_optimizer
 from utils.data_utils import NoiseDataLoader
 from utils.log_utils import prepare_csv, write_csv
 from timm.loss import LabelSmoothingCrossEntropy
-    
+
 def train():
     global best_acc
     parser = argparse.ArgumentParser()
@@ -62,6 +62,7 @@ def train():
     parser.add_argument('--TCov',default=100,type=int)         # for EKFAC
     parser.add_argument('--TScal',default=100,type=int)        # for EKFAC
     parser.add_argument('--TInv',default=100,type=int)        # for EKFAC
+
     # other argument
     parser.add_argument('--device',default='cuda',type=str)
     parser.add_argument('--resume','-r',action='store_true')         # resume from checkpoint
@@ -75,9 +76,11 @@ def train():
     optimizer,optim_name = get_optimizer(args,net)
     if args.milestone is None:
         if args.network.lower() in ['vit_small','vit_base','vit_large','vit_huge']:
+            # lr_scheduler = CosineAnnealingLR(optimizer,T_max=args.epoch)
             lr_scheduler = MultiStepLR(optimizer,milestones=[10,50,100,int(args.epoch*0.5),int(args.epoch*0.75)],gamma=0.1)
         else:
-            lr_scheduler = MultiStepLR(optimizer,milestones=[10,30,50,100,int(args.epoch*0.5),int(args.epoch*0.75)],gamma=0.1)
+            lr_scheduler = CosineAnnealingLR(optimizer,T_max=args.epoch)
+            # lr_scheduler = MultiStepLR(optimizer,milestones=[10,30,50,100,int(args.epoch*0.5),int(args.epoch*0.75)],gamma=0.1)
     else:
         milestone = [int(_) for _ in args.milestone.split(',')]
         lr_scheduler = MultiStepLR(optimizer,milestones=milestone,gamma=0.1)
@@ -113,33 +116,35 @@ def train():
             (optim_name,epoch+1,lr_scheduler.get_last_lr()[0],0,0,correct,total))
         prog_bar = tqdm(enumerate(trainloader),total=len(trainloader),desc=desc,leave=True)
         since = time.time()
-        for batch_index,(inputs,targets) in prog_bar:
-            inputs,targets = inputs.to(args.device),targets.to(args.device)
-            if args.dataset.lower() == 'mnist' or args.dataset.lower() == 'fashionmnist': inputs = inputs.view(-1,784)
+        for batch_index, (inputs, targets) in enumerate(trainloader):
+            inputs, targets = inputs.to(args.device), targets.to(args.device)
+            if args.dataset.lower() in ['mnist', 'fashionmnist']:
+                inputs = inputs.view(-1, 784)
             optimizer.zero_grad()
             outputs = net(inputs)
-            # print(f"inputs shape: {inputs.shape}, outputs shape: {outputs.shape}, targets shape: {targets.shape}")
-            loss = criterion(outputs,targets)
+            loss = criterion(outputs, targets)
             if optim_name in ['kfac','ekfac'] and optimizer.steps % optimizer.TCov == 0:
-                # compute true fisher
                 optimizer.acc_stats = True
                 with torch.no_grad():
-                    sampled_y = torch.multinomial(torch.nn.functional.softmax(outputs.to('cpu').data,dim=1),
+                    sampled_y = torch.multinomial(torch.nn.functional.softmax(outputs.to('cpu').data, dim=1),
                                                   1).squeeze().to(args.device)
-                loss_sample = criterion(outputs,sampled_y)
+                loss_sample = criterion(outputs, sampled_y)
                 loss_sample.backward(retain_graph=True)
                 optimizer.acc_stats = False
-                optimizer.zero_grad()  # clear the gradient for computing true-fisher.
+                optimizer.zero_grad()
             loss.backward()
             optimizer.step()
             time_elapsed += time.time() - since
             train_loss += loss.item()
-            _,predicted = outputs.max(1)
+            _, predicted = outputs.max(1)
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
             desc = ('[Train][%s][%s][LR=%.4f] Loss: %.4f | Acc: %.3f%% (%d/%d)' %
-                    (optim_name,epoch+1,lr_scheduler.get_last_lr()[0],train_loss / (batch_index + 1),100. * correct / total,correct,total))
-            prog_bar.set_description(desc,refresh=True)
+                    (optim_name, epoch+1, lr_scheduler.get_last_lr()[0],
+                     train_loss / (batch_index + 1), 100. * correct / total, correct, total))
+            prog_bar.set_description(desc, refresh=True)
+            prog_bar.update(1)
+        prog_bar.close()
         # write_csv(csv_train,csv_train_writer,csv_test,csv_test_writer,head=False,train=True,test=False,args=None,
                     # epoch=epoch,train_loss=train_loss,correct=correct,total=total,time_elapsed=time_elapsed,batch_index=batch_index)
         lr_scheduler.step()
@@ -167,22 +172,22 @@ def train():
         acc = 100.*correct/total
         # write_csv(csv_train,csv_train_writer,csv_test,csv_test_writer,head=False,train=False,test=True,args=None,
                     # epoch=epoch,test_loss=test_loss,acc=acc,batch_index=batch_idx,train_loss=train_loss)
-        # if acc > best_acc:
-        #     print('Saving..')
-        #     state = {
-        #         'net': net.state_dict(),
-        #         'acc': acc,
-        #         'epoch': epoch,
-        #         'loss': test_loss,
-        #         'args': args
-        #     }
-        # if args.experiment_type == 'error':
-        #     torch.save(state,'%s/%s_%s_%s%s_best.t7' % (model_path,
-        #                                                  args.optimizer,
-        #                                                  args.dataset,
-        #                                                  args.network,
-        #                                                  args.depth))
-            # best_acc = acc          
+        if acc > best_acc:
+            print('Saving..')
+            state = {
+                'net': net.state_dict(),
+                'acc': acc,
+                'epoch': epoch,
+                'loss': test_loss,
+                'args': args
+            }
+        if args.experiment_type == 'error':
+            torch.save(state,'%s/%s_%s_%s%s_best.t7' % (model_path,
+                                                         args.optimizer,
+                                                         args.dataset,
+                                                         args.network,
+                                                         args.depth))
+            best_acc = acc          
     # csv_train.close()
     # csv_test.close()
 

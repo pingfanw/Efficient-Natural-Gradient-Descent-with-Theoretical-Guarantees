@@ -10,7 +10,8 @@ from torchvision.datasets import CIFAR10,CIFAR100,MNIST,FashionMNIST,SVHN
 from torch.utils.data import ConcatDataset
 from PIL import Image
 
-# support datasets: cifar10,cifar100,mnist,fashionmnist,imagenet,miniimagenet, tinyimagenet
+# support vision datasets: cifar10,cifar100,mnist,fashionmnist,imagenet,miniimagenet,tinyimagenet
+# support language datasets: 
 
 def set_seed(seed=0): 
     if seed < 0:

@@ -1,6 +1,5 @@
 from optimizers import (KFACOptimizer,EKFACOptimizer,DNGD,SGD_,Adam_,AdaGrad_,AdamW,Muon)
 import torch.optim as optim
-import inspect
 def get_optimizer(args,net):
     OPTIMIZER_REGISTRY = {
         'sgd':       optim.SGD,
@@ -11,7 +10,7 @@ def get_optimizer(args,net):
         'sgd_':      SGD_,
         'adagrad_':  AdaGrad_,
         'adamw':     AdamW,
-        'muon':      Muon
+        'muon':      Muon,
     }
     optim_name = args.optimizer.lower()
     if optim_name not in OPTIMIZER_REGISTRY:
