@@ -20,8 +20,8 @@ def train():
     parser.add_argument('--dataset',default='cifar10',type=str,help="cifar10,cifar100,mnist,fashionmnist,imagenet,miniimagenet.")
     parser.add_argument('--noise_rate',default=0.0,type=float,help="Noise Rate.")
     parser.add_argument('--noise_mode',default='sym',type=str,help="Noise Mode for sym and asym.")
-    parser.add_argument('--num_workers',default=0,type=int,help="Num of workers.")
-    parser.add_argument('--data_path',default='E:\datasets',type=str,help="Data Path of Standard Datasets.")
+    parser.add_argument('--num_workers',default=8,type=int,help="Num of workers.")
+    parser.add_argument('--data_path',default='/nfsshare/home/wupingfan/datasets',type=str,help="Data Path of Standard Datasets.")   # E:\datasets
     parser.add_argument('--outputs_dim',default=10,type=int)
     parser.add_argument('--input_dim',default=32,type=int)
     parser.add_argument('--in_channels',default=3,type=int)
@@ -50,7 +50,7 @@ def train():
     parser.add_argument('--batch_size',default=128,type=int)
     parser.add_argument('--epoch',default=300,type=int)
     parser.add_argument('--eps',default=1e-10,type=float)             # for Adam AdamW and AdaGrad
-    parser.add_argument('--retraction_eps',default=1e-12,type=float)  # for Muon
+    parser.add_argument('--retraction_eps',default=1e-10,type=float)  # for Muon
     parser.add_argument('--amsgrad',default=False,type=bool)    # for Adam 
     parser.add_argument('--betas',default=[0.9,0.999],type=list)    # for Adam, AdamW and Muon
     parser.add_argument('--milestone',default=None,type=str)              # for MultiStepLR
@@ -104,8 +104,8 @@ def train():
         model_path = args.model_path+'/'+args.experiment_type+'/'+args.dataset.lower()+'/'+args.network.lower()+str(args.depth)
         if not os.path.isdir(model_path):
             os.makedirs(model_path)
-    # csv_train,csv_train_writer,csv_test,csv_test_writer = prepare_csv(args.log_path,args.dataset.lower(),args.network.lower(),args.depth,optim_name,args.noise_rate,args.damping,args.experiment_type)
-    # write_csv(csv_train,csv_train_writer,csv_test,csv_test_writer,head=True,train=False,tets=False,args=args,optim_name=optim_name)
+    csv_train,csv_train_writer,csv_test,csv_test_writer = prepare_csv(args.log_path,args.dataset.lower(),args.network.lower(),args.depth,optim_name,args.noise_rate,args.damping,args.experiment_type)
+    write_csv(csv_train,csv_train_writer,csv_test,csv_test_writer,head=True,train=False,tets=False,args=args,optim_name=optim_name)
     for epoch in range(start_epoch,args.epoch):
         # Train
         net.train()
@@ -145,8 +145,8 @@ def train():
             prog_bar.set_description(desc, refresh=True)
             prog_bar.update(1)
         prog_bar.close()
-        # write_csv(csv_train,csv_train_writer,csv_test,csv_test_writer,head=False,train=True,test=False,args=None,
-                    # epoch=epoch,train_loss=train_loss,correct=correct,total=total,time_elapsed=time_elapsed,batch_index=batch_index)
+        write_csv(csv_train,csv_train_writer,csv_test,csv_test_writer,head=False,train=True,test=False,args=None,
+                    epoch=epoch,train_loss=train_loss,correct=correct,total=total,time_elapsed=time_elapsed,batch_index=batch_index)
         lr_scheduler.step()
         # Validate 
         net.eval()
@@ -170,8 +170,8 @@ def train():
                         % (optim_name,epoch+1,lr_scheduler.get_last_lr()[0],test_loss / (batch_idx + 1),100. * correct / total,correct,total))
                 prog_bar.set_description(desc,refresh=True)        
         acc = 100.*correct/total
-        # write_csv(csv_train,csv_train_writer,csv_test,csv_test_writer,head=False,train=False,test=True,args=None,
-                    # epoch=epoch,test_loss=test_loss,acc=acc,batch_index=batch_idx,train_loss=train_loss)
+        write_csv(csv_train,csv_train_writer,csv_test,csv_test_writer,head=False,train=False,test=True,args=None,
+                    epoch=epoch,test_loss=test_loss,acc=acc,batch_index=batch_idx,train_loss=train_loss)
         if acc > best_acc:
             print('Saving..')
             state = {
@@ -188,8 +188,8 @@ def train():
                                                          args.network,
                                                          args.depth))
             best_acc = acc          
-    # csv_train.close()
-    # csv_test.close()
+    csv_train.close()
+    csv_test.close()
 
 def main():
     train()

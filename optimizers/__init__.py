@@ -1,4 +1,4 @@
-from .optimizers import KFACOptimizer,EKFACOptimizer,DNGD,SGD_,Adam_,AdaGrad_,AdamW,Muon,BlockAdaGrad
+from .optimizers import KFACOptimizer,EKFACOptimizer,DNGD,SGD_,Adam_,AdaGrad_,AdamW,Muon
 
 def get_optimizer(name):
     if name == 'kfac':

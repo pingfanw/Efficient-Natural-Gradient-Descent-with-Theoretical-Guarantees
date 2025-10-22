@@ -608,7 +608,6 @@ class EKFACOptimizer(optim.Optimizer):
             v[1] = v[1].view(m.bias.grad.data.size())
         else:
             v = [v.view(m.weight.grad.data.size())]
-
         return v
 
     def _kl_clip_and_update_grad(self,updates,lr):
