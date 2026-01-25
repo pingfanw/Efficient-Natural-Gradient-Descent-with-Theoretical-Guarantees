@@ -5,7 +5,7 @@ from transformers import AutoConfig, AutoModelForImageClassification
 
 class HFViT(nn.Module):
     """
-    HuggingFace ViT wrapper for Tiny-ImageNet (200 classes).
+    HuggingFace ViT wrapper for Mini-ImageNet (100 classes).
     Auto-resizes input to 224x224 to keep main loop & transforms untouched.
     """
     def __init__(self, model_name: str = "google/vit-base-patch16-224", num_classes: int = 100):

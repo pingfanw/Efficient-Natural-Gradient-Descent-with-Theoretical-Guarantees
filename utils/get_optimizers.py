@@ -1,4 +1,4 @@
-from optimizers import (KFACOptimizer,EKFACOptimizer,DNGD,SGD_,Adam_,AdaGrad_,AdamW,Muon)
+from optimizers import (KFACOptimizer,EKFACOptimizer,DNGD,SGD_,Adam_,AdaGrad_,AdamW,Muon,NGD)
 import torch.optim as optim
 def get_optimizer(args,net):
     OPTIMIZER_REGISTRY = {
@@ -11,6 +11,7 @@ def get_optimizer(args,net):
         'adagrad_':  AdaGrad_,
         'adamw':     AdamW,
         'muon':      Muon,
+        'ngd':       NGD
     }
     optim_name = args.optimizer.lower()
     if optim_name not in OPTIMIZER_REGISTRY:
@@ -45,6 +46,8 @@ def get_optimizer(args,net):
                             TCov=args.TCov,
                             TInv=args.TInv,
                             TScal=args.TScal)
+    elif optim_name == 'ngd':
+        optimizer = optim_cls(net, lr=args.learning_rate, momentum=args.momentum, weight_decay=args.weight_decay, damping=args.damping)
     else:
         raise ValueError(f"Optimizer '{optim_name}' has unknown constructor signature.")
     return optimizer,optim_name

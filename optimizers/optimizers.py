@@ -1,15 +1,11 @@
 import math
+import numpy
 import torch
 import torch.optim as optim
 import torch.linalg as LA
 from utils.kfac_utils import (ComputeCovA,ComputeCovG)
 from utils.kfac_utils import update_running_stat
 from utils.kfac_utils import ComputeMatGrad
-from torch import Tensor
-from torch.optim.optimizer import (Optimizer,required,_use_grad_for_differentiable,_default_to_fused_or_foreach,
-                        _differentiable_doc,_foreach_doc,_maximize_doc)
-from typing import List,Optional
-from torch.utils._foreach_utils import _group_tensors_by_device_and_dtype
 
 class SGD_(optim.Optimizer):
     def __init__(self,
@@ -274,6 +270,120 @@ class DNGD(optim.Optimizer):
         self._step(closure)         #update the parameters
         self.steps+=1
 
+class NGD(optim.Optimizer):
+    def __init__(self,
+                 model,
+                 lr=0.01,
+                 momentum=0.9,
+                 weight_decay=0,
+                 damping=1e-1):
+        # legitimation check
+        if lr < 0.0:
+            raise ValueError("Invalid learning rate: {}".format(lr))
+        if momentum < 0.0:
+            raise ValueError("Invalid momentum value: {}".format(momentum))
+        if weight_decay < 0.0:
+            raise ValueError("Invalid weight_decay value: {}".format(weight_decay))
+        defaults = dict(lr=lr,momentum=momentum,
+                        weight_decay=weight_decay,damping=damping)
+        super(NGD,self).__init__(model.parameters(),defaults)
+        self.known_modules = {'Linear','Conv2d'}
+        self.modules = []
+        """ list for saving modules temporarily """
+        self.model = model
+        # self.damping = damping
+        self._prepare_model()   
+        self.steps = 0
+        self.device="cuda:0"
+        self.prev_fvp = {m: None for m in self.modules}
+
+    def _prepare_model(self):
+        # print(self.model)
+        for module in self.model.modules():      
+            classname = module.__class__.__name__       
+            if classname in self.known_modules:    
+                self.modules.append(module)        
+
+    @staticmethod
+    def _get_matrix_form_grad(m,classname):
+        """
+        :param m: the mth layer
+        :param classname: the class name of the layer
+        :return: a matrix form of the gradient. it should be a [output_dim,input_dim] matrix.
+        """
+        if classname == 'Conv2d':
+            param_grad_mat = m.weight.grad.data.view(m.weight.grad.data.size(0),-1)  # n_filters * (in_c * kw * kh) 
+        else:
+            param_grad_mat = m.weight.grad.data
+        if m.bias is not None:
+            param_grad_mat = torch.cat([param_grad_mat,m.bias.grad.data.view(-1,1)],1)
+        return param_grad_mat
+
+    def _get_natural_grad(self,m,param_grad_mat,damping):
+        """
+        :param m:  the mth layer
+        :param param_grad_mat: the gradients in matrix form
+        :return: a list of gradients w.r.t to the parameters in `m` th layer
+        """
+        # print(param_grad_mat.size())
+        # print((param_grad_mat.view(-1,1)).size())
+        v1 = param_grad_mat.view(-1,1) * param_grad_mat.view(1,-1)
+        v = torch.linalg.solve(
+                v1+(torch.tensor(numpy.eye(v1.shape[0])*damping)).float().to(self.device),
+                param_grad_mat.view(-1,1)
+            ).view(param_grad_mat.size())
+        if m.bias is not None:
+            # we always put gradient w.r.t weight in [0]
+            # and w.r.t bias in [1]
+            v = [v[:,:-1],v[:,-1:]]
+            v[0] = v[0].view(m.weight.grad.data.size())
+            v[1] = v[1].view(m.bias.grad.data.size())
+        else:
+            v = [v.view(m.weight.grad.data.size())]
+        return v
+
+    def _update_grad(self,updates):        
+        # update grad with fvp
+        for m in self.modules:
+            v = updates[m]
+            m.weight.grad.data.copy_(v[0])      # update the weight,replacing the original gradient with F^-1*nebla(h)
+            if m.bias is not None:
+                m.bias.grad.data.copy_(v[1])        # update the bias
+
+    def _step(self,closure):
+        for group in self.param_groups:
+            weight_decay = group['weight_decay']
+            momentum = group['momentum']
+            lr= group['lr']
+            for param in group['params']:
+                if param.grad is None:
+                    continue
+                d_p = param.grad.data
+                if weight_decay != 0:
+                    d_p.add_(param.data,alpha=weight_decay)
+                if momentum != 0:                                       # add momentum
+                    param_state = self.state[param]
+                    if 'momentum_buffer' not in param_state:
+                        buf = param_state['momentum_buffer'] = torch.zeros_like(param.data)
+                        buf.mul_(momentum).add_(d_p)
+                    else:
+                        buf = param_state['momentum_buffer']
+                        buf.mul_(momentum).add_(d_p,alpha=1)
+                    d_p = buf
+                param.data.add_(d_p,alpha=-lr)      # update the parameters
+
+    def step(self,closure=None):
+        group = self.param_groups[0]
+        damping = group['damping']
+        updates = {}
+        for m in self.modules:
+            classname = m.__class__.__name__                                 #update the inverse of the fisher by implementing eigen decomposition of kronecker factor
+            param_grad_mat = self._get_matrix_form_grad(m,classname)       #acquiring the grad matrix of m layer (grad_mat=cat[weight,bias])
+            updates[m] = self._get_natural_grad(m,param_grad_mat,damping)                                       # put the fvp of m layer about bias and weight into updates[m]
+        self._update_grad(updates)                         
+        self._step(closure)         #update the parameters
+        self.steps+=1
+
 class KFACOptimizer(optim.Optimizer):
     def __init__(self,
                  model,
@@ -355,14 +465,14 @@ class KFACOptimizer(optim.Optimizer):
     def _prepare_model(self):
         count = 0
         # print(self.model)
-        # print("=> We keep following layers in KFAC. ")
+        print("=> We keep following layers in KFAC. ")
         for module in self.model.modules():
             classname = module.__class__.__name__
             if classname in self.known_modules:
                 self.modules.append(module)
                 module.register_forward_pre_hook(self._save_input)  
                 module.register_full_backward_hook(self._save_grad_output)
-                # print('=>(%s): %s' % (count,module))
+                print('=>(%s): %s' % (count,module))
                 count += 1
 
     def _update_inv(self,m):

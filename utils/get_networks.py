@@ -65,7 +65,7 @@ def get_network(args):
             net = get_network_imagenet(args.network,depth=args.depth,alpha=48,input_shape=(1,args.in_channels,args.input_dim,args.input_dim),num_classes=args.outputs_dim,base_channels=16,block_type='bottleneck')
         elif args.network.lower() in ['vit_small','vit_base', 'vit_large', 'vit_huge']:
             net = get_network_imagenet(args.network,mlp_ratio=args.mlp_ratio,input_size=args.input_dim,patch_size=args.patch_size,in_channels=args.in_channels,num_classes=args.outputs_dim)
-        elif args.network.lower() in ['pretrain_vit', 'pretrain_swin', 'pretrain_deit']:
+        elif args.network.lower() in ['pretrain_vit', 'pretrain_swin', 'pretrain_deit', 'pretrain_beit', 'pretrain_pvt']:
             net = get_network_imagenet(args.network,num_classes=args.outputs_dim)
         else:
             net = get_network_imagenet(args.network,depth=args.depth,num_classes=args.outputs_dim,growthRate=args.growthRate,compressionRate=args.compressionRate,widen_factor=args.widen_factor,dropRate=args.dropRate)
@@ -74,7 +74,7 @@ def get_network(args):
             net = get_network_miniimagenet(args.network,depth=args.depth,alpha=48,input_shape=(1,args.in_channels,args.input_dim,args.input_dim),num_classes=args.outputs_dim,base_channels=16,block_type='bottleneck')
         elif args.network.lower() in ['vit_small','vit_base', 'vit_large', 'vit_huge']:
             net = get_network_miniimagenet(args.network,mlp_ratio=args.mlp_ratio,input_size=args.input_dim,patch_size=args.patch_size,in_channels=args.in_channels,num_classes=args.outputs_dim)
-        elif args.network.lower() in ['pretrain_vit', 'pretrain_swin', 'pretrain_deit']:
+        elif args.network.lower() in ['pretrain_vit', 'pretrain_swin', 'pretrain_deit', 'pretrain_beit', 'pretrain_pvt']:
             net = get_network_miniimagenet(args.network,num_classes=args.outputs_dim)
         else:
             net = get_network_miniimagenet(args.network,depth=args.depth,num_classes=args.outputs_dim,growthRate=args.growthRate,compressionRate=args.compressionRate,widen_factor=args.widen_factor,dropRate=args.dropRate)
@@ -83,7 +83,7 @@ def get_network(args):
             net = get_network_tinyimagenet(args.network,depth=args.depth,alpha=48,input_shape=(1,args.in_channels,args.input_dim,args.input_dim),num_classes=args.outputs_dim,base_channels=16,block_type='bottleneck')
         elif args.network.lower() in ['vit_small','vit_base', 'vit_large', 'vit_huge']:
             net = get_network_tinyimagenet(args.network,mlp_ratio=args.mlp_ratio,input_size=args.input_dim,patch_size=args.patch_size,in_channels=args.in_channels,num_classes=args.outputs_dim)
-        elif args.network.lower() in ['pretrain_vit', 'pretrain_swin', 'pretrain_deit']:
+        elif args.network.lower() in ['pretrain_vit', 'pretrain_swin', 'pretrain_deit', 'pretrain_beit', 'pretrain_pvt']:
             net = get_network_tinyimagenet(args.network,num_classes=args.outputs_dim)
         else:
             net = get_network_tinyimagenet(args.network,depth=args.depth,num_classes=args.outputs_dim,growthRate=args.growthRate,compressionRate=args.compressionRate,widen_factor=args.widen_factor,dropRate=args.dropRate)

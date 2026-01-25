@@ -1,13 +1,12 @@
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from transformers import AutoConfig, AutoModelForImageClassification
 
 class HFSwin(nn.Module):
     """
-    HuggingFace Swin wrapper for Tiny-ImageNet (200 classes).
+    HuggingFace Swin wrapper for ImageNet (1000 classes).
     """
-    def __init__(self, model_name: str = "microsoft/swin-base-patch4-window7-224", num_classes: int = 100):
+    def __init__(self, model_name: str = "microsoft/swin-base-patch4-window7-224", num_classes: int = 1000):
         super().__init__()
         config = AutoConfig.from_pretrained(model_name, num_labels=num_classes)
         self.model = AutoModelForImageClassification.from_pretrained(

@@ -1,4 +1,8 @@
-from models.imagenet import (densenet,resnet,wrn,pyramidnet,vit_small,vit_base,vit_large,vit_huge,HFDeiT,HFSwin,HFViT)
+from models.imagenet import (
+    densenet, resnet, wrn, pyramidnet,
+    vit_small, vit_base, vit_large, vit_huge,
+    HFDeiT, HFSwin, HFViT, HFBeit, HFPvt,
+)
 
 def get_network_imagenet(network,**kwargs):
     networks = {
@@ -12,7 +16,8 @@ def get_network_imagenet(network,**kwargs):
         'vit_huge': vit_huge,
         'pretrain_vit': HFViT,
         'pretrain_swin': HFSwin,
-        'pretrain_deit': HFDeiT
+        'pretrain_deit': HFDeiT,
+        'pretrain_beit': HFBeit,
+        'pretrain_pvt': HFPvt,
     }
     return networks[network](**kwargs)
-

@@ -1,14 +1,12 @@
-# ./model/tinyimagenet/deit.py
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from transformers import AutoConfig, AutoModelForImageClassification
 
 class HFDeiT(nn.Module):
     """
-    HuggingFace DeiT wrapper for Tiny-ImageNet (200 classes).
+    HuggingFace DeiT wrapper for ImageNet (1000 classes).
     """
-    def __init__(self, model_name: str = "facebook/deit-base-distilled-patch16-224", num_classes: int = 100):
+    def __init__(self, model_name: str = "facebook/deit-base-distilled-patch16-224", num_classes: int = 1000):
         super().__init__()
         config = AutoConfig.from_pretrained(model_name, num_labels=num_classes)
         self.model = AutoModelForImageClassification.from_pretrained(
