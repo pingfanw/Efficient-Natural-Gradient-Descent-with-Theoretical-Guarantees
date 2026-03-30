@@ -12,7 +12,7 @@ class SGD_(optim.Optimizer):
                  params,
                  lr=0.01,
                  momentum=0.9,
-                 weight_decay=0):
+                 weight_decay=0.0):
         # legitimation check
         if lr < 0.0:
             raise ValueError("Invalid learning rate: {}".format(lr))
@@ -921,3 +921,114 @@ class Muon(optim.Optimizer):
                         scale = (old_norm / new_norm)
                         p.data.mul_(scale)
         return loss
+
+class SAM(optim.Optimizer):
+    def __init__(self,
+                 params,
+                 base_optimizer,
+                 rho: float = 0.05,
+                 adaptive: bool = False,
+                 **kwargs):
+        if rho < 0.0:
+            raise ValueError(f"Invalid rho value: {rho}")
+        defaults = dict(rho=rho, adaptive=adaptive, **kwargs)
+        super(SAM, self).__init__(params, defaults)
+
+        self.base_optimizer = base_optimizer(self.param_groups, **kwargs)
+        self.param_groups = self.base_optimizer.param_groups
+        self.defaults.update(self.base_optimizer.defaults)
+        self.defaults['rho'] = rho
+        self.defaults['adaptive'] = adaptive
+        self.sam_state = {}
+
+        for group in self.param_groups:
+            group.setdefault('rho', rho)
+            group.setdefault('adaptive', adaptive)
+
+    def __setstate__(self, state):
+        super(SAM, self).__setstate__(state)
+        self.base_optimizer.param_groups = self.param_groups
+
+    @torch.no_grad()
+    def _grad_norm(self):
+        shared_device = None
+        norms = []
+        for group in self.param_groups:
+            adaptive = group.get('adaptive', False)
+            for p in group['params']:
+                if p.grad is None:
+                    continue
+                if shared_device is None:
+                    shared_device = p.device
+                grad = p.grad
+                if adaptive:
+                    grad = grad * p.detach().abs()
+                norms.append(torch.norm(grad, p=2).to(shared_device))
+        if not norms:
+            if shared_device is None:
+                shared_device = torch.device('cpu')
+            return torch.tensor(0.0, device=shared_device)
+        return torch.norm(torch.stack(norms), p=2)
+
+    @torch.no_grad()
+    def ascent_step(self, zero_grad: bool = True):
+        grad_norm = self._grad_norm()
+        if grad_norm.item() == 0.0:
+            if zero_grad:
+                self.zero_grad()
+            return
+        for group in self.param_groups:
+            scale = group['rho'] / (grad_norm + 1.0e-12)
+            adaptive = group.get('adaptive', False)
+            for p in group['params']:
+                if p.grad is None:
+                    continue
+                state = self.sam_state.setdefault(p, {})
+                eps = state.get('eps')
+                if eps is None:
+                    eps = torch.zeros_like(p)
+                    state['eps'] = eps
+                eps.copy_(p.grad)
+                if adaptive:
+                    eps.mul_(p.detach().abs())
+                eps.mul_(scale)
+                p.add_(eps)
+        if zero_grad:
+            self.zero_grad()
+
+    @torch.no_grad()
+    def descent_step(self, zero_grad: bool = True):
+        for group in self.param_groups:
+            for p in group['params']:
+                if p.grad is None:
+                    continue
+                eps = self.sam_state.get(p, {}).get('eps')
+                if eps is None:
+                    continue
+                p.sub_(eps)
+        self.base_optimizer.step()
+        if zero_grad:
+            self.zero_grad()
+
+    @torch.no_grad()
+    def step(self, closure=None):
+        if closure is None:
+            raise RuntimeError('SAM requires a closure, or use ascent_step()/descent_step() explicitly.')
+        closure = torch.enable_grad()(closure)
+        loss = closure()
+        self.ascent_step(zero_grad=True)
+        closure()
+        self.descent_step(zero_grad=True)
+        return loss
+
+    def state_dict(self):
+        return {
+            'base_optimizer': self.base_optimizer.state_dict(),
+            'sam_state': self.sam_state,
+        }
+
+    def load_state_dict(self, state_dict):
+        base_state = state_dict.get('base_optimizer', state_dict)
+        self.base_optimizer.load_state_dict(base_state)
+        self.param_groups = self.base_optimizer.param_groups
+        self.sam_state = state_dict.get('sam_state', {})
