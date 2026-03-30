@@ -69,7 +69,7 @@ We consider four cases in ablation studies, and other parameters of D-NGD follow
 |           $\rho / \eta=2$            |   0.51790   |         82.11         |
 |           $\rho / \eta>2$            | **0.40327** |       **91.28**       |
 
-When $\rho = 0$, the error of loss not a number(nan) is triggered by the zero division in computing the product of inverse diagonal FIM and gradient. The full data of ablation experiment is provided in this project root: "\logs\distilbert_sst2_ablation". 
+When $\rho = 0$, the error of loss not a number(nan) is triggered by the zero division in computing the vector-jacobian product of inverse diagonal FIM and gradient. The full data of ablation experiment is provided in this project root: "\logs\distilbert_sst2_ablation". 
 
 ## 3. Additional Sharpness-Aware Minimization(SAM) Baseline
 
@@ -88,18 +88,54 @@ We can observe that, although SAM is not fully optimized in terms of hyperparame
 
 ## 4. Training a Transformer from Scratch
 
-For a fast reproduction of training a small transformer from scratch, one can use the code book in this project's root:"scratch_text_transformer.ipynb". The comparison among SGD, AdamW and D-NGD is provided in the following figures. 
+For a fast reproduction of results in this section, one can use the code book in this project's root:"scratch_text_transformer.ipynb". 
+
+(1).Training curves provides the comparison results among SGD, AdamW and D-NGD in the following figures.
 
 Compared with AdamW(Figure 2), D-NGD(Figure 1) shows a faster and more stable decrease in terms of loss curve and classification error. Compared with SGD(Figure 3), D-NGD(Figure 1) shows a faster decrease in terms of loss curve.
 
+(2). Ablation studies on $\rho$ are provided in Figure 4, 5, 6, 7 and 8.
+
+We consider five values of $\rho = [0.5,0.2,0.01,0.0001,0.0]$ and fixed $\eta = 0.1$ for D-NGD, as controlling of variables.
+
+As the ratio $\rho / \eta$ decrease, we can observe a clear instable training curves and significant decrease in test accuracy.
+
+-------------------------------
+
+### (1). Training Curves
+
 **Figure 1. The training & test loss curve and error rate of D-NGD on a small Transformer and small text classification.**
 
-<img src=".\scratch_dngd_transformer_curves.png" style="zoom: 50%;" />
+<img src=".\scratch_dngd_transformer_curves.png" style="zoom: 25%;" />
 
 **Figure 2. The training & test loss curve and error rate of AdamW on a small Transformer and small text classification.**
 
-<img src=".\scratch_adamw_transformer_curves.png" style="zoom: 50%;" />
+<img src=".\scratch_adamw_transformer_curves.png" style="zoom: 25%;" />
 
 **Figure 3. The training & test loss curve and error rate of SGD on a small Transformer and small text classification.**
 
-<img src=".\scratch_sgd_transformer_curves.png" style="zoom: 50%;" />
+<img src=".\scratch_sgd_transformer_curves.png" style="zoom: 25%;" />
+
+----------------------------
+
+### (2). Verification of Corollary 5.3 on Training Transformer from Scratch
+
+**Figure 4. D-NGD with $\rho=0.5$ and $\eta=0.1$**.
+
+<img src=".\0_rho0.5eta0.1_scratch_dngd_transformer_curves.png" style="zoom: 25%;" />
+
+**Figure 5. D-NGD with $\rho=0.2$ and $\eta=0.1$. A slower decrease in terms of Error Rate, compared with Figure 4($\rho =0.5$ and $\eta =0.1$).**
+
+<img src="1_rho0.2eta0.1_scratch_transformer_curves.png" style="zoom: 25%;" />
+
+**Figure 6. D-NGD with $\rho=0.01$ and $\eta=0.1$. Training process becomes instable.**
+
+<img src="2_rho0.01eta0.1_scratch_transformer_curves.png" style="zoom: 25%;" />
+
+**Figure 7. D-NGD with $\rho=0.0001$ and $\eta=0.1$. A clear decrease happens in Error Rate compared with Figure 6( $\rho=0.01$ and $\eta=0.1$).**
+
+<img src="3_rho0.0001eta0.1_scratch_transformer_curves.png" style="zoom: 25%;" />
+
+**Figure 8. D-NGD with $\rho=0.0$ and $\eta=0.1$. Error rate keeps at 50% and a surge shows in training curves.**
+
+<img src="4_rho0.0eta0.1_scratch_transformer_curves.png" style="zoom:25%;" />
