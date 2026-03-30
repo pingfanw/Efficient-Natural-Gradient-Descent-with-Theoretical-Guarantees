@@ -10,10 +10,10 @@ Under the optimal hyper-parameter sweep, results of Table 1 are repeatedly run t
 
 | Optimizer / Results |     Test Accuracy(%)      | Averaged Wall-Clock Time(s) |
 | :-----------------: | :-----------------------: | :-------------------------: |
-|        AdamW        |   91.06$+-0.16$   |   214.06$_{\pm\{18.25\}}$   |
-|         SGD         |   90.65$_{\pm\{0.08\}}$   | **197.28$_{\pm\{8.26\}}$**  |
-|        K-FAC        |   91.04$_{\pm\{0.14\}}$   |   385.61$_{\pm\{21.76\}}$   |
-|        D-NGD        | **91.34$_{\pm\{0.08\}}$** |   215.04$_{\pm\{11.06\}}$   |
+|        AdamW        |   91.06(+-0.16)   |   214.06(+-18.25)   |
+|         SGD         |   90.65(+-0.08)   | **197.28(+-8.26)**  |
+|        K-FAC        |   91.04(+-0.14)   |   385.61(+-21.76)   |
+|        D-NGD        | **91.34(+-0.08)** |   215.04(+-11.06)   |
 
 The hyper-parameter settings in Table 1 are selected by the following sweep protocols. Corresponding sweep data is in the project path of ""\logs\distilbert_sst2\sweep".
 
@@ -77,8 +77,8 @@ We add SAM as an additional baseline. This experiments are conducted on GLUE SST
 
 | Optimizer |       Test Accuracy       | Averaged Wall-Clock Time(s) |
 | :-------: | :-----------------------: | :-------------------------: |
-|    SAM    | **91.69$_{\pm\{0.07\}}$** |   376.33$_{\pm\{14.64\}}$   |
-|   D-NGD   |   91.34$_{\pm\{0.08\}}$   | **215.04$_{\pm\{11.06\}}$** |
+|    SAM    | **91.69(+-0.07)** |   376.33(+-14.64)   |
+|   D-NGD   |   91.34(+-0.08)   | **215.04(+-11.06)** |
 
 D-NGD hyper-parameters are followed by the optimal configuration in Table 1. We implement SAM and use SGD as the base optimizer of SAM. Its radius hyperparameter is configured as the recommended value $0.1$ of the paper [1]. Other parameters are followed by the base optimizer SGD($\eta=3e-4$, $momentum = 0.9$, $weight\_decay = 5e-4$). 
 
