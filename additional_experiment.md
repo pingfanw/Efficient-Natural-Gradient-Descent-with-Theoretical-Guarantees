@@ -10,7 +10,7 @@ Under the optimal hyper-parameter sweep, results of Table 1 are repeatedly run t
 
 | Optimizer / Results |     Test Accuracy(%)      | Averaged Wall-Clock Time(s) |
 | :-----------------: | :-----------------------: | :-------------------------: |
-|        AdamW        |   91.06$\pm 0.16$   |   214.06$_{\pm\{18.25\}}$   |
+|        AdamW        |   91.06$+-0.16$   |   214.06$_{\pm\{18.25\}}$   |
 |         SGD         |   90.65$_{\pm\{0.08\}}$   | **197.28$_{\pm\{8.26\}}$**  |
 |        K-FAC        |   91.04$_{\pm\{0.14\}}$   |   385.61$_{\pm\{21.76\}}$   |
 |        D-NGD        | **91.34$_{\pm\{0.08\}}$** |   215.04$_{\pm\{11.06\}}$   |
