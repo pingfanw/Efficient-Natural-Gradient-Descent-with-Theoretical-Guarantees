@@ -58,7 +58,7 @@ We consider four cases in ablation studies, and other parameters of D-NGD follow
 - $\rho =0,$ i.e., $\rho=0.0$, $\eta= 3e-5$,  $momentum=0.6$;
 - $\rho / \eta <2,$ i.e., $\rho=6e-6$, $\eta= 3e-5$,  $momentum=0.6$;
 - $\rho / \eta =2,$ i.e., $\rho=6e-5$, $\eta= 3e-5$,  $momentum=0.6$;
-- $\rho / \eta > 2$ i.e., $\rho=6e-5$, $\eta= 3e-5$,  $momentum=0.6$.
+- $\rho / \eta > 2$ i.e., $\rho=6e-4$, $\eta= 3e-5$,  $momentum=0.6$.
 
 **Table 4. Ablation Studies of Damping Term**
 
