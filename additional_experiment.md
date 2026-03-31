@@ -88,7 +88,7 @@ We can observe that, although SAM is not fully optimized in terms of hyperparame
 
 ## 4. Training a Transformer from Scratch
 
-For a fast reproduction of results in this section, one can use the code book in this project's root:"scratch_text_transformer.ipynb". 
+For a fast reproduction of results in this section, one can run the code book in this project's root:"scratch_text_transformer.ipynb".
 
 (1).Training curves provides the comparison results among SGD, AdamW and D-NGD in the following figures.
 
@@ -99,6 +99,14 @@ Compared with AdamW(Figure 2), D-NGD(Figure 1) shows a faster and more stable de
 We consider five values of $\rho = [0.5,0.2,0.01,0.0001,0.0]$ and fixed $\eta = 0.1$ for D-NGD, as controlling of variables.
 
 As the ratio $\rho / \eta$ decrease, we can observe a clear instable training curves and significant decrease in test accuracy.
+
+Hyper-parameter settings are set to be optimal for each algorithm: 
+
+D-NGD ($\eta=0.1, momentum=0.6, weight\_decay=5e-4, \rho=0.5$), 
+
+SGD ($\eta=0.1, momentum=0.9, weight\_decay=5e-4$) ,
+
+AdamW ($\eta=0.01,weight\_decay=5e-4, (\beta_1,\beta_2)=(0.9,0.99), \epsilon=1e-3$).
 
 -------------------------------
 
