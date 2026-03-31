@@ -2,7 +2,7 @@
 
 ## 1.Expansion Experiments on Text Task
 
-The formal results are conducted on the GLUE SST-2 sentimental classification dataset using pretrained DistilBert-base model with a single Nvidia A100 GPU.
+The formal results are conducted on the GLUE SST-2 sentimental classification dataset using pretrained DistilBert-base model with a single Nvidia A100 GPU. The sweep results are conducted on the same hardware.
 
 Under the optimal hyper-parameter sweep, results of Table 1 are repeatedly run two times for 80 epochs and 32 batch size, and take the averaged best test accuracy within two times run. The values of accuracy are reported with standard variance float. Per-epoch wall-clock time is reported as epoch averaged value with standard variance.
 
