@@ -2,7 +2,7 @@
 
 ## 1.Expansion Experiments on Text Task
 
-The formal results are conducted on the GLUE SST-2 sentimental classification dataset using pretrained DistilBert-base model with a single Nvidia A100 GPU.
+The formal results are conducted on the GLUE SST-2 sentimental classification dataset using pretrained DistilBert-base model with a single Nvidia A100 GPU. The sweep results are conducted on the same hardware.
 
 Under the optimal hyper-parameter sweep, results of Table 1 are repeatedly run two times for 80 epochs and 32 batch size, and take the averaged best test accuracy within two times run. The values of accuracy are reported with standard variance float. Per-epoch wall-clock time is reported as epoch averaged value with standard variance.
 
@@ -51,7 +51,7 @@ For AdamW, we conducted a weight decay sweep on $\{5e-1,5e-2,5e-3,5e-4,5e-5,5e-6
 
 ## 2. Ablation Studies of $\rho$
 
-We run the ablation studies of damping term $\rho$ to verify its role of controlling the lower bound of generalization error in Corollary 5.3 and improving numerical stability. Dataset and model are GLUE SST-2 and DistilBert-base. Results are reported with best test accuracy 
+We run the ablation studies of damping term $\rho$ to verify its role of controlling the lower bound of generalization error in Corollary 5.3 and improving numerical stability. Dataset and model are GLUE SST-2 and DistilBert-base. Results are reported with best test accuracy. The full data of ablation experiment is provided in this project root: "\logs\distilbert_sst2_ablation".
 
 We consider four cases in ablation studies, and other parameters of D-NGD follow the optimal hyper-parameter setting in Table 2:
 
@@ -69,7 +69,7 @@ We consider four cases in ablation studies, and other parameters of D-NGD follow
 |           $\rho / \eta=2$            |   0.51790   |         82.11         |
 |           $\rho / \eta>2$            | **0.40327** |       **91.28**       |
 
-When $\rho = 0$, the error of loss not a number(nan) is triggered by the zero division in computing the vector-jacobian product of inverse diagonal FIM and gradient. The full data of ablation experiment is provided in this project root: "\logs\distilbert_sst2_ablation". 
+When $\rho = 0$, the error of loss not a number(nan) is triggered by the zero division in computing the vector-jacobian product of inverse diagonal FIM and gradient. 
 
 ## 3. Additional Sharpness-Aware Minimization(SAM) Baseline
 
@@ -102,17 +102,17 @@ As the ratio $\rho / \eta$ decrease, we can observe a clear instable training cu
 
 Hyper-parameter settings are set to be optimal for each algorithm: 
 
-D-NGD ($\eta=0.1, momentum=0.6, weightdecay=5e-4, \rho=0.5$), 
+D-NGD: $\eta=0.1, momentum=0.6, weightdecay=5e-4, \rho=0.5$, 
 
-SGD ($\eta=0.1, momentum=0.9, weightdecay=5e-4$) ,
+SGD: $\eta=0.1, momentum=0.9, weightdecay=5e-4$,
 
-AdamW ($\eta=0.01,weightdecay=5e-4, (\beta_1,\beta_2)=(0.9,0.99), \epsilon=1e-3$).
+AdamW: $\eta=0.01,weightdecay=5e-4, (\beta_1,\beta_2)=(0.9,0.99), \epsilon=1e-3$.
 
 -------------------------------
 
 ### (1). Training Curves
 
-**Figure 1. The training & test loss curve and error rate of D-NGD on a small Transformer and small text classification. Compared with AdamW(Figure 2), D-NGD shows a faster and more stable decrease in terms of loss curve and classification error. Compared with SGD(Figure 3), D-NGD(Figure 1) shows a faster decrease in terms of loss curve**
+**Figure 1. The training & test loss curve and error rate of D-NGD on a small Transformer and small text classification. Compared with AdamW(Figure 2), D-NGD shows a faster and more stable decrease in terms of loss curve and classification error. Compared with SGD(Figure 3), D-NGD(Figure 1) shows a faster decrease in terms of loss curve.**
 
 <img src=".\scratch_dngd_transformer_curves.png" style="zoom: 25%;" />
 
