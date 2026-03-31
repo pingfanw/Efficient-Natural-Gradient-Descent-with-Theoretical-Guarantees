@@ -36,7 +36,7 @@ Each sweep run used a batch size of 32 and was conducted for 20 epochs on a sing
 |        K-FAC        |            $\eta=3e-4$ $momentum=0.9$ $\rho=1e-1$            |    0.36720     |         90.97         |
 |        D-NGD        |          $\rho=6e-4$, $\eta= 3e-5$,  $momentum=0.6$          |    0.35705     |       **91.74**       |
 
-For AdamW, we conducted a weight decay sweep on $\{5e-1,5e-2,5e-3,5e-4,5e-5,5e-6\}$ after the optimal value of $\eta=3e-4$, $(\beta_1,\beta_2)=(0.9.0.99)$ and $\epsilon=1e-3$ was determined. The optimal value of weight decay for AdamW takes $5e-4$ as the following table shows. Similar optimal weight decay settings are also observed on other optimizers and therefore we set $weight\_decay=5e-4$ for SGD, D-NGD and K-FAC.
+For AdamW, we conducted a weight decay sweep on $\{5e-1,5e-2,5e-3,5e-4,5e-5,5e-6\}$ after the optimal value of $\eta=3e-4$, $(\beta_1,\beta_2)=(0.9.0.99)$ and $\epsilon=1e-3$ was determined. The optimal value of weight decay for AdamW takes $5e-4$ as the following table shows. Similar optimal weight decay settings are also observed on other optimizers and therefore we set $weightdecay=5e-4$ for SGD, D-NGD and K-FAC.
 
 **Table 3. Weight decay sweep of AdamW.**
 
@@ -80,7 +80,7 @@ We add SAM as an additional baseline. This experiments are conducted on GLUE SST
 |    SAM    | **91.69(+-0.07)** |   376.33(+-14.64)   |
 |   D-NGD   |   91.34(+-0.08)   | **215.04(+-11.06)** |
 
-D-NGD hyper-parameters are followed by the optimal configuration in Table 1. We implement SAM and use SGD as the base optimizer of SAM. Its radius hyperparameter is configured as the recommended value $0.1$ of the paper [1]. Other parameters are followed by the base optimizer SGD($\eta=3e-4$, $momentum = 0.9$, $weight\_decay = 5e-4$). 
+D-NGD hyper-parameters are followed by the optimal configuration in Table 1. We implement SAM and use SGD as the base optimizer of SAM. Its radius hyperparameter is configured as the recommended value $0.1$ of the paper [1]. Other parameters are followed by the base optimizer SGD($\eta=3e-4$, $momentum = 0.9$, $weightdecay = 5e-4$). 
 
 We can observe that, although SAM is not fully optimized in terms of hyperparameters, it can outperform D-NGD in terms of generalization performance. However, the improvement is at the significant increase of wall-clock time. 
 
@@ -102,11 +102,11 @@ As the ratio $\rho / \eta$ decrease, we can observe a clear instable training cu
 
 Hyper-parameter settings are set to be optimal for each algorithm: 
 
-D-NGD ($\eta=0.1, momentum=0.6, weight\_decay=5e-4, \rho=0.5$), 
+D-NGD ($\eta=0.1, momentum=0.6, weightdecay=5e-4, \rho=0.5$), 
 
-SGD ($\eta=0.1, momentum=0.9, weight\_decay=5e-4$) ,
+SGD ($\eta=0.1, momentum=0.9, weightdecay=5e-4$) ,
 
-AdamW ($\eta=0.01,weight\_decay=5e-4, (\beta_1,\beta_2)=(0.9,0.99), \epsilon=1e-3$).
+AdamW ($\eta=0.01,weightdecay=5e-4, (\beta_1,\beta_2)=(0.9,0.99), \epsilon=1e-3$).
 
 -------------------------------
 
