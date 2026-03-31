@@ -102,17 +102,17 @@ As the ratio $\rho / \eta$ decrease, we can observe a clear instable training cu
 
 Hyper-parameter settings are set to be optimal for each algorithm: 
 
-D-NGD ($\eta=0.1, momentum=0.6, weightdecay=5e-4, \rho=0.5$), 
+D-NGD: $\eta=0.1, momentum=0.6, weightdecay=5e-4, \rho=0.5$, 
 
-SGD ($\eta=0.1, momentum=0.9, weightdecay=5e-4$) ,
+SGD: $\eta=0.1, momentum=0.9, weightdecay=5e-4$,
 
-AdamW ($\eta=0.01,weightdecay=5e-4, (\beta_1,\beta_2)=(0.9,0.99), \epsilon=1e-3$).
+AdamW: $\eta=0.01,weightdecay=5e-4, (\beta_1,\beta_2)=(0.9,0.99), \epsilon=1e-3$.
 
 -------------------------------
 
 ### (1). Training Curves
 
-**Figure 1. The training & test loss curve and error rate of D-NGD on a small Transformer and small text classification. Compared with AdamW(Figure 2), D-NGD shows a faster and more stable decrease in terms of loss curve and classification error. Compared with SGD(Figure 3), D-NGD(Figure 1) shows a faster decrease in terms of loss curve**
+**Figure 1. The training & test loss curve and error rate of D-NGD on a small Transformer and small text classification. Compared with AdamW(Figure 2), D-NGD shows a faster and more stable decrease in terms of loss curve and classification error. Compared with SGD(Figure 3), D-NGD(Figure 1) shows a faster decrease in terms of loss curve.**
 
 <img src=".\scratch_dngd_transformer_curves.png" style="zoom: 25%;" />
 
