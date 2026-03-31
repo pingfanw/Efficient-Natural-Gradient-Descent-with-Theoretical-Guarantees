@@ -112,7 +112,7 @@ AdamW ($\eta=0.01,weight\_decay=5e-4, (\beta_1,\beta_2)=(0.9,0.99), \epsilon=1e-
 
 ### (1). Training Curves
 
-**Figure 1. The training & test loss curve and error rate of D-NGD on a small Transformer and small text classification.**
+**Figure 1. The training & test loss curve and error rate of D-NGD on a small Transformer and small text classification. Compared with AdamW(Figure 2), D-NGD shows a faster and more stable decrease in terms of loss curve and classification error. Compared with SGD(Figure 3), D-NGD(Figure 1) shows a faster decrease in terms of loss curve**
 
 <img src=".\scratch_dngd_transformer_curves.png" style="zoom: 25%;" />
 
