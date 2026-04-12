@@ -2,8 +2,10 @@ import csv
 import json
 import os
 
-TEXT_DATASETS = {'sst2'}
+TEXT_DATASETS = {'sst2', 'gsm8k'}
+GENERATIVE_TEXT_DATASETS = {'gsm8k'}
 VIT_NETWORKS = {'vit_small', 'vit_base', 'vit_large', 'vit_huge'}
+
 
 def _model_dir_name(dataset, model, depth):
     if model in VIT_NETWORKS or dataset in TEXT_DATASETS:
@@ -60,14 +62,20 @@ def write_csv(csv_train, csv_train_writer, csv_test, csv_test_writer,
             'network:', args.network, 'depth', args.depth, 'Loss:CrossEntropy', 'Dataset:', args.dataset, 'Optimizer:', kwargs['optim_name'],
             'LearningRate:', args.learning_rate, 'BatchSize:', args.batch_size, 'EpochRange:', args.epoch,
         ])
-        csv_train_writer.writerow(['Epoch', 'Train_Loss', 'Train_Accuracy'])
+        if args.dataset in GENERATIVE_TEXT_DATASETS:
+            csv_train_writer.writerow(['Epoch', 'Train_Loss', 'Train_Token_Accuracy'])
+        else:
+            csv_train_writer.writerow(['Epoch', 'Train_Loss', 'Train_Accuracy'])
         csv_train.flush()
 
         csv_test_writer.writerow([
             'network:', args.network, 'depth', args.depth, 'Loss:CrossEntropy', 'Dataset:', args.dataset, 'Optimizer:', kwargs['optim_name'],
             'LearningRate:', args.learning_rate, 'BatchSize:', args.batch_size, 'EpochRange:', args.epoch,
         ])
-        csv_test_writer.writerow(['Epoch', 'Test_Loss', 'Test_Accuracy', 'Generalization_Gap'])
+        if args.dataset in GENERATIVE_TEXT_DATASETS:
+            csv_test_writer.writerow(['Epoch', 'Test_Loss', 'Test_Exact_Match', 'Generalization_Gap'])
+        else:
+            csv_test_writer.writerow(['Epoch', 'Test_Loss', 'Test_Accuracy', 'Generalization_Gap'])
         csv_test.flush()
     elif train:
         csv_train_writer.writerow([

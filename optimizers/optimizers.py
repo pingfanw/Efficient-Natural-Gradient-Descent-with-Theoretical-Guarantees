@@ -442,6 +442,8 @@ class KFACOptimizer(optim.Optimizer):
         """ the period for computing the covariance of the activation and gradient """
         self.TInv = TInv
         """ the period for updating the inverse of the covariance """
+        self.acc_stats = False
+        """ whether backward hooks should accumulate Fisher statistics on the current pass """
 
     def _save_input(self,module,input):
         if torch.is_grad_enabled() and self.steps % self.TCov == 0:
@@ -633,6 +635,7 @@ class EKFACOptimizer(optim.Optimizer):
         self.TCov = TCov
         self.TScal = TScal
         self.TInv = TInv
+        self.acc_stats = False
 
     def _save_input(self,module,input):
         if torch.is_grad_enabled() and self.steps % self.TCov == 0:
