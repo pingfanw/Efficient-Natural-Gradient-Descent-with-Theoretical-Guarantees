@@ -1,10 +1,5 @@
 # !/bin/bash
 
-# /root/projects/Efficient-Natural-Gradient-Descent-with-Theoretical-Guarantees
-# /root/autodl-tmp
-# ssh -p 51326 root@connect.westb.seetacloud.com CB0AHhW1CK+L
-# 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
-
 # hyper-parameters sweep
 
 # D-NGD
