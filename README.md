@@ -1,5 +1,6 @@
 # Efficient-Natural-Gradient-Descent-with-Theoretical-Guarantees
 Numerial Experiment of the paper "Diagonal Natural Gradient Descent: Training Efficiency Improved with Generalization Preserved".
+Numerial Experiment of the paper "Diagonal Natural Gradient Descent: Training Efficiency Improved with Generalization Preserved".
 
 Requirements:
 
