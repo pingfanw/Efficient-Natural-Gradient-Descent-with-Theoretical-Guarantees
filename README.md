@@ -176,9 +176,9 @@ logs/
 
 Where:
 
-- `train/*.csv`: Training loss and training accuracy (or token accuracy) per epoch
-- `test/*.csv`: Test loss and test accuracy (or GSM8K exact match) per epoch
-- `wallclock/*.csv`: Single-round time and cumulative time per epoch
+- `train/*.csv`: Training loss and training accuracy (or token accuracy) per itertaion
+- `test/*.csv`: Test loss and test accuracy (or GSM8K exact match) per iteration
+- `wallclock/*.csv`: Single-round time and cumulative time per iteration
 - `sweep/*_summary.csv`: Summary of best metrics for each hyperparameter combination
 
 ### 3.2 Checkpoint Saving Rules
